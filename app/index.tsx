@@ -28,7 +28,7 @@ export default function Index() {
                 setEmail("");
                 setPassword("");
                 setErrorLogin("");
-                router.push("/internas/tasks");
+                router.push("/screens/HomeScreen");
             })
             .catch((error) => {
                 const errorMessage = error.message;

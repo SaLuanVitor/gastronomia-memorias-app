@@ -8,6 +8,7 @@ export default function RootLayout() {
                 headerStyle: { backgroundColor: "#FFA07A" }, // Fundo pastel mais vibrante
                 headerShadowVisible: false,
                 headerTintColor: '#FFFFFF', // Cor do texto do cabeçalho para branco
+                headerTitleStyle:{color:"#FFA07A"}
             }}
         >
             <Stack.Screen 
