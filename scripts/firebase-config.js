@@ -8,14 +8,14 @@ import {getDatabase} from "firebase/database"
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDCtnl4fArDgBcn-MQKAip8-gOn0oRcy4s",
-  authDomain: "app-pra-fazer.firebaseapp.com",
-  databaseURL: "https://pra-fazer-app-default-rtdb.firebaseio.com",
-  projectId: "app-pra-fazer",
-  storageBucket: "app-pra-fazer.appspot.com",
-  messagingSenderId: "520581718434",
-  appId: "1:520581718434:web:6e3980851e70821faf12fb",
-  measurementId: "G-ZGG4M6H2NG"
+  apiKey: "AIzaSyBQANTjQ3dnxUOEkxjfEkMCb1lKCCgLVys",
+  authDomain: "gastronomia-memoria.firebaseapp.com",
+  databaseURL: "https://gastronomia-memoria-default-rtdb.firebaseio.com",
+  projectId: "gastronomia-memoria",
+  storageBucket: "gastronomia-memoria.firebasestorage.app",
+  messagingSenderId: "9069224244",
+  appId: "1:9069224244:web:58b27683f182a0a1918561",
+  measurementId: "G-BDK229B16C"
 };
 
 // Initialize Firebase
