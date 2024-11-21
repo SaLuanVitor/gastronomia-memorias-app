@@ -5,6 +5,7 @@ import SystemModal from "../../components/SystemModal";
 import { auth, db } from "../../scripts/firebase-config"; 
 import { ref, set } from "firebase/database";
 import { launchImageLibrary } from "react-native-image-picker";
+import {Picker} from '@react-native-picker/picker';
 
 export default function Nova() {
     const [title, setTitle] = useState("");
@@ -12,6 +13,8 @@ export default function Nova() {
     const [portion, setPortion] = useState(""); 
     const [prepTime, setPrepTime] = useState(""); 
     const [rating, setRating] = useState(""); 
+    const [categori, setCategori] = useState(""); 
+    const [selectedLanguage, setSelectedLanguage] = useState();
     const [modalVisible, setModalVisible] = useState(false);
     const [modalContent, setModalContent] = useState({
         title: "",
@@ -96,12 +99,13 @@ export default function Nova() {
         }
     
         const newRecipe = {
-            title,
-            description,
+            title: title,
+            description: description,
             portion: portionValue,  
             rating: ratingValue,    
             prepTime: prepTime,         
             userId: user.uid,  
+            categori:categori,
             createdAt: Date.now(), 
             image: image,
         };
@@ -120,6 +124,8 @@ export default function Nova() {
                 setPortion(""); 
                 setRating(""); 
                 setPrepTime(""); 
+                setCategori(""); 
+                setDescription("");
                 setImage(null);
             })
             .catch((error) => {
@@ -145,6 +151,14 @@ export default function Nova() {
                     value={title}
                     onChangeText={setTitle}
                 />
+                <Picker
+  selectedValue={selectedLanguage}
+  onValueChange={(itemValue, itemIndex) =>
+    setSelectedLanguage(itemValue)
+  }>
+  <Picker.Item label="Java" value="java" />
+  <Picker.Item label="JavaScript" value="js" />
+</Picker>
                 <TextInput 
                     style={styles.inputLong}
                     placeholder="Descrição"
