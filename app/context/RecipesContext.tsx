@@ -9,6 +9,7 @@ interface Recipe {
     prepTime: string;
     rating: string;
     mainImage: string | null;
+    category: string;
 }
 
 interface RecipesContextData {

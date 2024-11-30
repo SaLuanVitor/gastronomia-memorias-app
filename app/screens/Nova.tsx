@@ -13,7 +13,7 @@ export default function Nova() {
     const [portion, setPortion] = useState(""); 
     const [prepTime, setPrepTime] = useState(""); 
     const [rating, setRating] = useState(""); 
-    const [categori, setCategori] = useState(""); 
+    const [category, setcategory] = useState(""); 
     const [selectedLanguage, setSelectedLanguage] = useState();
     const [modalVisible, setModalVisible] = useState(false);
     const [modalContent, setModalContent] = useState({
@@ -53,6 +53,16 @@ export default function Nova() {
             return;
         }
     
+        if (!category) {
+            setModalContent({
+                title: "Erro",
+                message: "Por favor, selecione uma categorya.",
+                type: "error",
+            });
+            setModalVisible(true);
+            return;
+        }
+    
         const portionValue = parseInt(portion, 10);
         if (isNaN(portionValue)) {
             setModalContent({
@@ -74,7 +84,7 @@ export default function Nova() {
             setModalVisible(true);
             return;
         }
-
+    
         const timeRegex = /^([0-9]{1,2}):([0-9]{2})$/;
         if (!prepTime.match(timeRegex)) {
             setModalContent({
@@ -105,7 +115,7 @@ export default function Nova() {
             rating: ratingValue,    
             prepTime: prepTime,         
             userId: user.uid,  
-            categori:categori,
+            category: category,
             createdAt: Date.now(), 
             image: image,
         };
@@ -124,7 +134,7 @@ export default function Nova() {
                 setPortion(""); 
                 setRating(""); 
                 setPrepTime(""); 
-                setCategori(""); 
+                setcategory(""); 
                 setDescription("");
                 setImage(null);
             })
@@ -137,6 +147,7 @@ export default function Nova() {
                 setModalVisible(true);
             });
     };
+    
 
     return (
         <View style={styles.mainContainer}>
@@ -152,13 +163,17 @@ export default function Nova() {
                     onChangeText={setTitle}
                 />
                 <Picker
-  selectedValue={selectedLanguage}
-  onValueChange={(itemValue, itemIndex) =>
-    setSelectedLanguage(itemValue)
-  }>
-  <Picker.Item label="Java" value="java" />
-  <Picker.Item label="JavaScript" value="js" />
+    selectedValue={category}
+    style={styles.picker}
+    onValueChange={(itemValue) => setcategory(itemValue)}
+>
+    <Picker.Item label="Selecione uma categoria" value="" />
+    <Picker.Item label="Café" value="Café" />
+    <Picker.Item label="Almoço" value="Almoço" />
+    <Picker.Item label="Lanche" value="Lanche" />
+    <Picker.Item label="Janta" value="Janta" />
 </Picker>
+
                 <TextInput 
                     style={styles.inputLong}
                     placeholder="Descrição"
@@ -302,4 +317,13 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#FFF",
     },
+    picker: {
+        backgroundColor: "#FFFFFF", // Cor de fundo
+        borderRadius: 10,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: "#FF7043",
+        padding: 10,
+    },
+    
 });
