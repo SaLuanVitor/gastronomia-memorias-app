@@ -6,8 +6,8 @@ import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image } from "reac
 
 export default function Index() {
     const router = useRouter();
-    const [email, setEmail] = useState("luanvitors_852@hotmail.com");
-    const [password, setPassword] = useState("12345678");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [errorLogin, setErrorLogin] = useState("");
 
     const validarCampos = () => {
@@ -56,8 +56,8 @@ export default function Index() {
                 <TextInput
                     style={styles.input}
                     placeholder='E-mail'
-                    // value={email}
-                    value='luanvitors_852@hotmail.com'
+                    value={email}
+                    // value='luanvitors_852@hotmail.com'
                     onChangeText={setEmail}
                 />
 
@@ -65,8 +65,8 @@ export default function Index() {
                     style={styles.input}
                     placeholder='Senha'
                     secureTextEntry={true}
-                    // value={password}
-                    value='12345678'
+                    value={password}
+                    // value='12345678'
                     onChangeText={setPassword}
                 />
 

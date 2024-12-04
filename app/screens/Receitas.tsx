@@ -11,22 +11,23 @@ import {
     ScrollView,
     ImageBackground,
     Modal,
-    Button, // Para botão de salvar
+    Button,
+    Alert, // Importação do Alert para confirmação
 } from "react-native";
 import { auth, db } from "../../scripts/firebase-config";
-import { ref, query, orderByChild, equalTo, onValue, update } from "firebase/database";
+import { ref, query, orderByChild, equalTo, onValue, update, remove, Database } from "firebase/database"; // Importação do remove
 import { launchImageLibrary } from 'react-native-image-picker';
 import { TextInputMask } from 'react-native-masked-text';
-import {Picker} from '@react-native-picker/picker';
+import { Picker } from '@react-native-picker/picker';
 
 export default function Receitas() {
     const [search, setSearch] = useState("");
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState(""); // Categoria selecionada
-    const [modalVisible, setModalVisible] = useState(false); // Controle de visibilidade do modal
-    const [selectedRecipe, setSelectedRecipe] = useState(null); // Receita selecionada para edição
+    const [selectedCategory, setSelectedCategory] = useState("");
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedRecipe, setSelectedRecipe] = useState(null);
 
     const handleChangeImage = () => {
         launchImageLibrary(
@@ -94,13 +95,19 @@ export default function Receitas() {
 
     const categories = ["Café", "Almoço", "Jantar", "Lanche"];
 
-    const handleEditRecipe = (recipe) => {
-        setSelectedRecipe(recipe);  // Define a receita selecionada para edição
-        setModalVisible(true); // Abre o modal
+    const handleEditRecipe = (recipes) => {
+        setSelectedRecipe(recipes);
+        setModalVisible(true);
     };
 
     const handleSaveChanges = async () => {
         if (selectedRecipe) {
+            // Validação de campos obrigatórios
+            if (!selectedRecipe.title || !selectedRecipe.category) {
+                Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
+
             const recipeRef = ref(db, "recipes/" + selectedRecipe.id);
             await update(recipeRef, {
                 title: selectedRecipe.title,
@@ -110,10 +117,20 @@ export default function Receitas() {
                 category: selectedRecipe.category,
                 image: selectedRecipe.image,
             });
-            setModalVisible(false); // Fecha o modal após salvar
+            setModalVisible(false);
         }
     };
 
+    const handleDeleteRecipe = async (id) => {
+        try {
+            const recipeRef = ref(db, 'recipes/' + id); // Caminho até o item da receita no banco de dados
+            await remove(recipeRef); // Exclui o item
+            console.log("Receita excluída com sucesso!");
+        } catch (error) {
+            console.error("Erro ao excluir receita:", error);
+        }
+    };
+    
     const handleInputChange = (field, value) => {
         setSelectedRecipe((prevRecipe) => ({
             ...prevRecipe,
@@ -149,7 +166,7 @@ export default function Receitas() {
                     ? require("../../assets/images/jantar.gif")
                     : selectedCategory === "Lanche"
                     ? require("../../assets/images/lanche.gif")
-                    : null
+                    : require("../../assets/images/cafe.gif") // Imagem padrão caso nenhuma categoria esteja selecionada
             }
             style={styles.backgroundImage}
             resizeMode="cover"
@@ -189,8 +206,8 @@ export default function Receitas() {
                         data={filteredRecipes}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => handleEditRecipe(item)}>
-                                <View style={styles.recipeCard}>
+                            <View style={styles.recipeCard}>
+                                <TouchableOpacity onPress={() => handleEditRecipe(item)}>
                                     <Image
                                         source={item.image && item.image !== "" ? { uri: item.image } : require("../../assets/images/recipe-icon.png")}
                                         style={styles.recipeImage}
@@ -212,96 +229,103 @@ export default function Receitas() {
                                             {item.category || "Não especificada"}
                                         </Text>
                                     </View>
-                                    <View style={styles.ratingContainer}>
-                                        <Text style={styles.ratingText}>{item.rating || "N/A"}⭐</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
+                                </TouchableOpacity>
+
+                                {/* Botão de exclusão */}
+                                <TouchableOpacity
+    style={styles.deleteButton}
+    onPress={() => handleDeleteRecipe(item.id)}
+>
+    <Text style={styles.deleteText}>X</Text>
+</TouchableOpacity>
+
+
+                            </View>
                         )}
                         ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma receita encontrada.</Text>}
+                        initialNumToRender={10} // Melhor performance com listas grandes
+                        maxToRenderPerBatch={10}
                     />
                 </ScrollView>
             </View>
 
             {/* Modal de Edição */}
             <Modal
-    visible={modalVisible}
-    animationType="slide"
-    transparent={true}
-    onRequestClose={() => setModalVisible(false)}
->
-    <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-            <TextInput
-                style={styles.modalInput}
-                placeholder="Título"
-                value={selectedRecipe?.title}
-                onChangeText={(text) => handleInputChange("title", text)}
-            />
-            <TextInput
-                style={styles.modalInput}
-                placeholder="Descrição"
-                value={selectedRecipe?.description}
-                onChangeText={(text) => handleInputChange("description", text)}
-            />
-            <TextInputMask
-                style={styles.modalInput}
-                type={'custom'}
-                placeholder="Porção"
-                value={selectedRecipe?.portion}
-                onChangeText={(text) => handleInputChange("portion", text)}
-                keyboardType="numeric"
-                options={{ mask: '9999' }} // Máscara para a porção
-            />
-            <TextInputMask
-                style={styles.modalInput}
-                type={'custom'}
-                placeholder="Tempo de preparo"
-                value={selectedRecipe?.prepTime}
-                onChangeText={(text) => handleInputChange("prepTime", text)}
-                keyboardType="numeric"
-                options={{ mask: '99:99' }} // Máscara para tempo (HH:mm)
-            />
-
-            {/* Substituindo TextInput por Picker para Categoria */}
-            <Picker
-                selectedValue={selectedRecipe?.category}
-                style={styles.picker}
-                onValueChange={(itemValue) => handleInputChange("category", itemValue)}
+                visible={modalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setModalVisible(false)}
             >
-                <Picker.Item label="Selecione uma categoria" value="" />
-                <Picker.Item label="Café" value="Café" />
-                <Picker.Item label="Almoço" value="Almoço" />
-                <Picker.Item label="Lanche" value="Lanche" />
-                <Picker.Item label="Janta" value="Janta" />
-            </Picker>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <TextInput
+                            style={styles.modalInput}
+                            placeholder="Título"
+                            value={selectedRecipe?.title}
+                            onChangeText={(text) => handleInputChange("title", text)}
+                        />
+                        <TextInput
+                            style={styles.modalInput}
+                            placeholder="Descrição"
+                            value={selectedRecipe?.description}
+                            onChangeText={(text) => handleInputChange("description", text)}
+                        />
+                        <TextInputMask
+                            style={styles.modalInput}
+                            type={'custom'}
+                            placeholder="Porção"
+                            value={selectedRecipe?.portion}
+                            onChangeText={(text) => handleInputChange("portion", text)}
+                            keyboardType="numeric"
+                            options={{ mask: '9999' }}
+                        />
+                        <TextInputMask
+                            style={styles.modalInput}
+                            type={'custom'}
+                            placeholder="Tempo de preparo"
+                            value={selectedRecipe?.prepTime}
+                            onChangeText={(text) => handleInputChange("prepTime", text)}
+                            keyboardType="numeric"
+                            options={{ mask: '99:99' }}
+                        />
 
-            {/* Botão para alterar imagem */}
-            <TouchableOpacity 
-                style={styles.changeImageButton} 
-                onPress={handleChangeImage}
-            >
-                <Text style={styles.changeImageButtonText}>Alterar Imagem</Text>
-            </TouchableOpacity>
+                        {/* Picker para Categoria */}
+                        <Picker
+                            selectedValue={selectedRecipe?.category}
+                            style={styles.picker}
+                            onValueChange={(itemValue) => handleInputChange("category", itemValue)}
+                        >
+                            <Picker.Item label="Selecione uma categoria" value="" />
+                            {categories.map((cat) => (
+                                <Picker.Item key={cat} label={cat} value={cat} />
+                            ))}
+                        </Picker>
 
-            {/* Exibir a imagem atual */}
-            {selectedRecipe?.image ? (
-                <Image
-                    source={{ uri: selectedRecipe.image }}
-                    style={styles.imagePreview}
-                />
-            ) : (
-                <Text style={styles.noImageText}>Nenhuma imagem selecionada</Text>
-            )}
+                        {/* Botão para alterar imagem */}
+                        <TouchableOpacity 
+                            style={styles.changeImageButton} 
+                            onPress={handleChangeImage}
+                        >
+                            <Text style={styles.changeImageButtonText}>Alterar Imagem</Text>
+                        </TouchableOpacity>
 
-            <View style={styles.modalButtons}>
-                <Button  title="Cancelar" onPress={() => setModalVisible(false)}  />
-                <Button title="Salvar" onPress={handleSaveChanges} />
-            </View>
-        </View>
-    </View>
-</Modal>
+                        {/* Exibir a imagem atual */}
+                        {selectedRecipe?.image ? (
+                            <Image
+                                source={{ uri: selectedRecipe.image }}
+                                style={styles.imagePreview}
+                            />
+                        ) : (
+                            <Text style={styles.noImageText}>Nenhuma imagem selecionada</Text>
+                        )}
 
+                        <View style={styles.modalButtons}>
+                            <Button title="Cancelar" onPress={() => setModalVisible(false)} />
+                            <Button title="Salvar" onPress={handleSaveChanges} />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </ImageBackground>
     );
 }
@@ -330,6 +354,7 @@ const styles = StyleSheet.create({
     modalButtons: {
         flexDirection: "row",
         justifyContent: "space-between",
+        marginTop: 10,
     },
     editButton: {
         color: "#FF7043",
@@ -393,6 +418,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 4,
+        alignItems: "center",
+        position: "relative", // Para posicionar o botão de exclusão
     },
     recipeImage: {
         width: 80,
@@ -422,6 +449,7 @@ const styles = StyleSheet.create({
     recipeInfoText: {
         fontSize: 12,
         color: "#999",
+        marginLeft: 10
     },
     ratingContainer: {
         justifyContent: "center",
@@ -506,19 +534,16 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginBottom: 12,
     },
-    
     changeImageButtonText: {
         color: "#FFF",
         fontSize: 16,
     },
-    
     imagePreview: {
         width: 100,
         height: 100,
         borderRadius: 10,
         marginBottom: 12,
     },
-    
     noImageText: {
         color: "#999",
         fontSize: 14,
@@ -532,4 +557,33 @@ const styles = StyleSheet.create({
         borderColor: "#FF7043",
         padding: 10,
     },
+    deleteButton: {
+        position: "absolute",
+        top: 5,
+        right: 5,
+        backgroundColor: "#FF3B30", // Cor vermelha para destacar o botão
+        width: 25,
+        height: 25,
+        borderRadius: 12.5,
+        justifyContent: "center",
+        alignItems: "center",
+        color:"#FFF"
+    },
+    deleteButtonText: {
+        color: "#FFF",
+        fontWeight: "bold",
+        fontSize: 16,
+        lineHeight: 16,
+    },
+    deleteText:{
+        color:"#FFF"
+    }
 });
+function deleteDoc(recipeDoc: any) {
+    throw new Error("Function not implemented.");
+}
+
+function doc(db: Database, arg1: string, id: any) {
+    throw new Error("Function not implemented.");
+}
+

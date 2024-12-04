@@ -171,7 +171,7 @@ export default function Nova() {
     <Picker.Item label="Café" value="Café" />
     <Picker.Item label="Almoço" value="Almoço" />
     <Picker.Item label="Lanche" value="Lanche" />
-    <Picker.Item label="Janta" value="Janta" />
+    <Picker.Item label="Jantar" value="Jantar" />
 </Picker>
 
                 <TextInput 
